@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: peau
+  m_Name: peau 1
   m_Shader: {fileID: -6465566751694194690, guid: edd7abf643fa4bc4e8561d4c280c97cf, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -168,7 +168,7 @@ Material:
     - _UseSpecular: 1
     - _ZWrite: 0
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.7878914, b: 0.11299982, a: 1}
+    - _BaseColor: {r: 1, g: 0.7878914, b: 0.11299979, a: 0.5019608}
     - _Color: {r: 0.90588236, g: 0.7154412, b: 0.22647059, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _HColor: {r: 1, g: 1, b: 1, a: 1}
