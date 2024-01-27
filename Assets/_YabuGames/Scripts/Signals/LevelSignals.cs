@@ -6,6 +6,8 @@ namespace _YabuGames.Scripts.Signals
 {
     public class LevelSignals : MonoBehaviour
     {
+        public UnityAction OnGo = delegate { };
+        public UnityAction OnRewind = delegate { };
         #region Singleton
 
         public static LevelSignals Instance;
