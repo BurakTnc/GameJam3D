@@ -20,12 +20,12 @@ namespace _YabuGames.Scripts.Controllers
             _isSelectable = selectable;
             if (_isSelectable)
                 if(killHint)
-                     transform.localScale = Vector3.one * .7f;
+                     transform.localScale = Vector3.one * 35f;
                 else
-                    transform.localScale = Vector3.one * .5f;
+                    transform.localScale = Vector3.one * 25f;
             else
             {
-                transform.localScale = Vector3.one;
+                transform.localScale = Vector3.one * 57.5f;
             }
         }
         public bool IsOccupied() => _isOccupied;
