@@ -13,7 +13,14 @@ namespace _YabuGames.Scripts.Controllers
         {
             var fixedPos = new Vector3(transform.position.x+(distance)*(direction.x) , 1, transform.position.z+(distance* direction.z));
             Debug.DrawRay(fixedPos+Vector3.up*.5f,new Vector3(0,-1,0),Color.blue,100);
-            
+
+            if (Physics.Raycast(transform.position, direction, out var hitCheck, 1000))
+            {
+                if (hitCheck.collider.CompareTag("Enemy"))
+                {
+                    return;
+                }
+            }
             if (Physics.Raycast(fixedPos,new Vector3(0,-1,0),out var hit,1000))
             {
                 if (hit.collider.CompareTag("Hex"))

@@ -51,7 +51,10 @@ namespace _YabuGames.Scripts.Controllers
         {
             Leave();
             _collisionController.onMove = true;
-            _collisionController.hasSelected = false; transform.DOMove(desiredPos, moveDuration).SetEase(Ease.InBack).OnComplete(KillEnemies);
+            _collisionController.hasSelected = false;
+            //transform.DOMove(desiredPos, moveDuration).SetEase(Ease.InBack).OnComplete(KillEnemies);
+            transform.DOJump(desiredPos, 1
+                , 2, moveDuration).SetEase(Ease.InOutSine).OnComplete(KillEnemies);
         }
 
         private void KillEnemies()

@@ -97,6 +97,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d4b0ab77c684bb4adbf98997b5a0578, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  neighborMat: {fileID: 2100000, guid: 76a7ba6ea5c6f486281007fcd42b3432, type: 2}
+  jumpMat: {fileID: 2100000, guid: 68e56536cf3da4b38aa1d49e4aa9ed9f, type: 2}
 --- !u!64 &1001592415611237483
 MeshCollider:
   m_ObjectHideFlags: 0

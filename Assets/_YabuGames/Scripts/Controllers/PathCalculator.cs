@@ -67,10 +67,10 @@ namespace _YabuGames.Scripts.Controllers
             switch (id)
             {
                 case 1:
-                    direction = new Vector3(.5f, 0, 0);
+                    direction = new Vector3(1f, 0, 0);
                     break;
                 case 2:
-                    direction = new Vector3(-.5f, 0, 0);
+                    direction = new Vector3(-1f, 0, 0);
                     break;
                 case 3:
                     direction = new Vector3(.5f, 0, 1);

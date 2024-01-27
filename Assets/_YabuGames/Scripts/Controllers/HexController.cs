@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using UnityEngine;
 
@@ -5,8 +6,18 @@ namespace _YabuGames.Scripts.Controllers
 {
     public class HexController : MonoBehaviour
     {
+        [SerializeField] private Material neighborMat, jumpMat;
+
+        private MeshRenderer _meshRenderer;
+        private Color _defaultColor;
         private bool _isOccupied;
         private bool _isSelectable;
+
+        private void Awake()
+        {
+            _meshRenderer = GetComponent<MeshRenderer>();
+            _defaultColor = GetComponent<MeshRenderer>().material.color;
+        }
 
         public void Occupy(bool occupied)
         {
@@ -19,13 +30,13 @@ namespace _YabuGames.Scripts.Controllers
         {
             _isSelectable = selectable;
             if (_isSelectable)
-                if(killHint)
-                     transform.localScale = Vector3.one * 35f;
+                if (killHint)
+                    _meshRenderer.material.DOColor(jumpMat.color, .3f).SetEase(Ease.InSine);
                 else
-                    transform.localScale = Vector3.one * 25f;
+                    _meshRenderer.material.DOColor(neighborMat.color, .3f).SetEase(Ease.InSine);
             else
             {
-                transform.localScale = Vector3.one * 57.5f;
+                _meshRenderer.material.DOColor(_defaultColor, .3f).SetEase(Ease.InSine);
             }
         }
         public bool IsOccupied() => _isOccupied;
