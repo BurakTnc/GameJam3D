@@ -1,25 +1,49 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace _YabuGames.Scripts.Controllers
 {
     public class CollisionController : MonoBehaviour
     {
-        private void OnCollisionEnter(Collision collision)
+        public List<EnemyController> _killedEnemies = new List<EnemyController>();
+        public bool onMove;
+        public bool hasSelected;
+        
+        private PlayerController _playerController;
+
+        private void Awake()
         {
-            switch (collision.transform.tag)
+            _playerController = GetComponent<PlayerController>();
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            var canPlace = other.CompareTag("Hex") && !onMove && !hasSelected;
+            if (canPlace)
             {
-                default:
-                    break;
+                _playerController.Occupy(other.GetComponent<HexController>());
+                hasSelected = true;
+            }
+        }
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.CompareTag("Enemy"))
+            {
+                if (other.TryGetComponent(out EnemyController enemyController))
+                {
+                    _killedEnemies.Add(enemyController);
+                }
             }
         }
 
-        private void OnTriggerEnter(Collider other)
+        public List<EnemyController> GetKilledEnemies()
         {
-            switch (other.tag)
-            {
-                default:
-                    break;
-            }
+            return _killedEnemies;
+        }
+
+        public void ClearEnemyList()
+        {
+            _killedEnemies.Clear();
         }
     }
 }
