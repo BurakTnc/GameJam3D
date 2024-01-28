@@ -114,7 +114,7 @@ namespace _YabuGames.Scripts.Managers
                     var enemy = Instantiate(Resources.Load<GameObject>("Spawnables/Enemy")).transform;
                     enemy.localScale = Vector3.zero;
                     enemy.position = hex.transform.position + Vector3.up * 1.3f;
-                    enemy.DOMove(hex.transform.position + Vector3.up * 1.3f, .3f)
+                    enemy.DOMove(hex.transform.position + Vector3.up * .3f, .3f)
                         .OnComplete(() => SpawnParticle(enemy));
                     enemy.DOScale(Vector3.one * 30, .3f).SetEase(Ease.OutBack);
                     _enemyList.Add(enemy.GetComponent<EnemyController>());
