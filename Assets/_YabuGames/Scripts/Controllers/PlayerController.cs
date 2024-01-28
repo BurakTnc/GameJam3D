@@ -15,15 +15,20 @@ namespace _YabuGames.Scripts.Controllers
         private PathCalculator _pathCalculator;
         private Camera _camera;
         public HexController _currentHex;
-        private List<Vector3> _wayPoints = new List<Vector3>();
+        public List<Vector3> _wayPoints = new List<Vector3>();
         private Vector3 _initialPosition;
         private Vector3 _ghostPosition;
         private bool _sequenceBegan;
         private LineRenderer _lineRenderer;
         private HexController _previousHex;
+        public int _stepID;
+        public List<HexController> _prevList = new List<HexController>();
+        private SphereCollider _collider;
+        private bool _onRewind;
 
         private void Awake()
         {
+            _collider = GetComponent<SphereCollider>();
             _ghost = transform.GetChild(0).gameObject;
             _pathCalculator = GetComponent<PathCalculator>();
             _collisionController = GetComponent<CollisionController>();
@@ -36,11 +41,13 @@ namespace _YabuGames.Scripts.Controllers
         private void OnEnable()
         {
             LevelSignals.Instance.OnGo += BeginMoveSequence;
+            LevelSignals.Instance.OnRewind += Rewind;
         }
 
         private void OnDisable()
         {
             LevelSignals.Instance.OnGo -= BeginMoveSequence;
+            LevelSignals.Instance.OnRewind -= Rewind;
         }
 
         private void Update()
@@ -66,29 +73,34 @@ namespace _YabuGames.Scripts.Controllers
                         return;
                     var hexPosition = hit.collider.transform.position;
                     var fixedPosition = new Vector3(hexPosition.x, 0, hexPosition.z);
-                    MoveSequence(fixedPosition);
+                    if (hex.isJumpHint) 
+                        _pathCalculator.onJumpKill = true;
+                    MoveSequence(fixedPosition,hex.isJumpHint);
                 }
             }
         }
-        private void MoveSequence(Vector3 desiredPos)
+        private void MoveSequence(Vector3 desiredPos,bool onJump = true, bool onRewind = false)
         {
             if (!_sequenceBegan)
             {
                 _ghostPosition = transform.position;
                 _ghost.transform.position = _ghostPosition;
             }
-                
-            _ghost.SetActive(true);
+
+            _onRewind = onRewind;
+            _stepID++;
+            _ghost.SetActive(onJump);
             Leave();
             _initialPosition = transform.position;
             _collisionController.onMove = true;
             _collisionController.hasSelected = false;
-            transform.DOMove(desiredPos, moveDuration-.4f).SetEase(Ease.Linear).OnComplete(PausePath);
-           _wayPoints.Add(desiredPos);
-           _sequenceBegan = true;
-           
-           if (_currentHex) 
-               _currentHex.ActAsGoButton(true);
+            
+            transform.DOMove(desiredPos, moveDuration-.4f).SetEase(Ease.Linear).OnComplete(()=>PausePath(onJump,onRewind));
+            if (!onRewind)
+            {
+                _wayPoints.Add(desiredPos);
+                _sequenceBegan = true;
+            }
         }
 
         private void BeginMoveSequence()
@@ -104,7 +116,6 @@ namespace _YabuGames.Scripts.Controllers
                 moveSeq.Append(transform.DOJump(pos, 1
                     , 2, moveDuration).SetEase(Ease.InOutSine).OnComplete(KillEnemies)).SetDelay(.15f);
             }
-            
         }
 
         private void KillEnemies()
@@ -120,12 +131,19 @@ namespace _YabuGames.Scripts.Controllers
                 enemy.Die();
             }
             _collisionController.ClearEnemyList();
-            //_pathCalculator.CalculateGeneral();
+            _pathCalculator.onJumpKill = false;
             StartCoroutine(_pathCalculator.Start());
         }
 
-        private void PausePath()
+        private void PausePath(bool onJump, bool onRewind =false)
         {
+            if (!onJump && !onRewind)
+            {
+                KillEnemies();
+                return;
+            }
+
+            _collider.enabled = true;
             _collisionController.onMove = false;
             _pathCalculator.ResetHints();
             StartCoroutine(_pathCalculator.Start());
@@ -135,18 +153,32 @@ namespace _YabuGames.Scripts.Controllers
             {
                 _lineRenderer.SetPosition(i+1,_wayPoints[i]);
             }
-
-            // for (var i = 0; i < _pathIndex-1; i++)
-            // {
-            //     if(i == 0)
-            //         _lineRenderer.SetPosition(0,transform.position);
-            //     else
-            //         _lineRenderer.SetPosition(i,_wayPoints[i]);
-            // }
         }
 
+        private void Rewind()
+        {
+            _onRewind = true;
+            _collisionController.ClearEnemyList();
+            _collider.enabled = false;
+            _stepID -= 2;
+            if (_wayPoints.Count>0)
+            {
+                _wayPoints.RemoveAt(_wayPoints.Count - 1);
+            }
+            var desiredPos = _prevList[_stepID+1].transform.position + Vector3.up * .3f;
+            MoveSequence(desiredPos,false,true);
+            if (_stepID>0)
+            {
+                _prevList[_stepID-1].ActAsRewindButton(true);
+            }
+            _prevList.RemoveAt(_prevList.Count-1
+            );
+            
+        }
         public void Occupy(HexController hex)
         {
+            if(_onRewind) return;
+            
             if(_previousHex)
                 _previousHex.ByPass(true);
             _currentHex = hex;
@@ -154,14 +186,25 @@ namespace _YabuGames.Scripts.Controllers
             if (!_sequenceBegan) return;
             if (_currentHex) 
                 _currentHex.ActAsGoButton(true);
+            if(_previousHex)
+                _previousHex.ActAsRewindButton(true);
+            
         }
 
         public void Leave()
         {
+            if(_onRewind) return;
+            
             if(!_currentHex)
                 return;
-            _currentHex.ByPass(false);
+            if (_previousHex)
+            {
+                _previousHex.ByPass(false);
+                _previousHex.ActAsRewindButton(false);
+            }
+                 
             _previousHex = _currentHex;
+            _prevList.Add(_previousHex);
             _currentHex.Occupy(false);
             _currentHex.SelectionHint(false);
             _currentHex = null;

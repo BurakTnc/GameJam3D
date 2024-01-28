@@ -1,4 +1,5 @@
 using System;
+using _YabuGames.Scripts.Managers;
 using _YabuGames.Scripts.Signals;
 using DG.Tweening;
 using UnityEngine;
@@ -10,7 +11,8 @@ namespace _YabuGames.Scripts.Controllers
         [SerializeField] private Material neighborMat, jumpMat;
         [SerializeField] private GameObject fakeGoButton;
         [SerializeField] private GameObject fakeRewindButton;
-        
+
+        private HexRootManager _hexRoot;
         private MeshRenderer _meshRenderer;
         private Color _defaultColor;
         private bool _isOccupied;
@@ -18,10 +20,12 @@ namespace _YabuGames.Scripts.Controllers
         private bool _actingAsGoButton;
         private bool _actingAsRewindButton;
         private bool _onByPass;
-       
+        public bool isJumpHint;
+
 
         private void Awake()
         {
+            _hexRoot = GetComponentInParent<HexRootManager>();
             _meshRenderer = GetComponent<MeshRenderer>();
             _defaultColor = GetComponent<MeshRenderer>().material.color;
         }
@@ -55,9 +59,16 @@ namespace _YabuGames.Scripts.Controllers
             _isSelectable = selectable;
             if (_isSelectable)
                 if (killHint)
+                {
+                    isJumpHint = true;
                     _meshRenderer.material.DOColor(jumpMat.color, .3f).SetEase(Ease.InSine);
+                }
                 else
+                {
+                    isJumpHint = false;
                     _meshRenderer.material.DOColor(neighborMat.color, .3f).SetEase(Ease.InSine);
+                }
+                    
             else
             {
                 _meshRenderer.material.DOColor(_defaultColor, .3f).SetEase(Ease.InSine);
@@ -68,6 +79,7 @@ namespace _YabuGames.Scripts.Controllers
 
         public void JumpHint()
         {
+            _hexRoot.killHints++;
             SelectionHint(true,true);
         }
 

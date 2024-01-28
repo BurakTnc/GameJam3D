@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using _YabuGames.Scripts.Managers;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -10,23 +11,24 @@ namespace _YabuGames.Scripts.Controllers
     {
         [SerializeField] private float neighborRange;
         [SerializeField] private LayerMask hexLayer, enemyLayer;
-
+        
+        private HexRootManager _hexRoot;
         private Collider[] _scannedColliders = new Collider[7];
         private List<HexController> _killHints = new List<HexController>();
         private int _stepCount;
+        public bool onJumpKill;
 
-        // private void OnDrawGizmos()
-        // {
-        //     Gizmos.color=Color.red;
-        //     Gizmos.DrawWireSphere(transform.position,neighborRange);
-        // }
+        private void Awake()
+        {
+            _hexRoot = GameObject.Find("HexRoot").GetComponent<HexRootManager>();
+        }
 
         public IEnumerator Start()
         {
             yield return new WaitForSeconds(.25f);
-            CheckNeighbors();
-            yield return new WaitForSeconds(.10f);
             CheckEnemies();
+            yield return new WaitForSeconds(.10f);
+            CheckNeighbors();
         }
 
         public void CalculateGeneral()
@@ -45,7 +47,7 @@ namespace _YabuGames.Scripts.Controllers
         }
         private void FireRay(Vector3 direction)
         {
-            var origin = new Vector3(transform.position.x, 0, transform.position.z); ;
+            var origin = new Vector3(transform.position.x, 0, transform.position.z); 
             Debug.DrawRay(origin+Vector3.up*.5f,direction,Color.red,100);
             if (Physics.Raycast(origin,direction,out var hit,1000,enemyLayer))
             {
@@ -54,7 +56,8 @@ namespace _YabuGames.Scripts.Controllers
                     if (hit.collider.TryGetComponent(out EnemyController enemyController))
                     {
                         var distance = Vector3.Distance(transform.position, hit.collider.transform.position);
-                        enemyController.FireRay(direction,(int)distance,this);
+                        distance = Mathf.FloorToInt(distance);
+                        enemyController.FireRay(direction,distance,this);
                     }
                     
                 }
@@ -93,6 +96,10 @@ namespace _YabuGames.Scripts.Controllers
 
         private void CheckNeighbors()
         {
+            var condition1 = _hexRoot.killHints > 0 && onJumpKill;
+            
+            if (condition1 || onJumpKill) return;
+            
             _scannedColliders = Physics.OverlapSphere(transform.position, neighborRange, hexLayer);
            
             foreach (var obj in _scannedColliders)
@@ -108,22 +115,35 @@ namespace _YabuGames.Scripts.Controllers
 
         public void ResetHints()
         {
-            foreach (var obj in _scannedColliders)
+            _hexRoot.killHints = 0;
+
+            if (_scannedColliders.Length>0)
             {
-                if (obj.TryGetComponent(out HexController hex))
+                foreach (var obj in _scannedColliders)
                 {
+                    if(!obj) continue;
+                    if (obj.TryGetComponent(out HexController hex))
+                    {
+                        hex.SelectionHint(false);
+                    }
+                }
+            }
+
+            if (_killHints.Count>0)
+            {
+                foreach (var hex in _killHints)
+                {
+                    if(!hex) continue;
                     hex.SelectionHint(false);
                 }
             }
 
-            foreach (var hex in _killHints)
+            if (_scannedColliders.Length>0)
             {
-                hex.SelectionHint(false);
-            }
-
-            for (var i = 0; i < _scannedColliders.Length; i++)
-            {
-                _scannedColliders[i] = null;
+                for (var i = 0; i < _scannedColliders.Length; i++)
+                {
+                    _scannedColliders[i] = null;
+                }
             }
             _killHints.Clear();
         }
