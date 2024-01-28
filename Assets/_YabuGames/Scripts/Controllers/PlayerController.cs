@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using _YabuGames.Scripts.Managers;
 using _YabuGames.Scripts.Signals;
 using DG.Tweening;
 using UnityEngine;
@@ -22,12 +24,15 @@ namespace _YabuGames.Scripts.Controllers
         private LineRenderer _lineRenderer;
         private HexController _previousHex;
         public int _stepID;
+        public int _jumpCount;
         public List<HexController> _prevList = new List<HexController>();
         private SphereCollider _collider;
         private bool _onRewind;
+        private HexRootManager _hexRoot;
 
         private void Awake()
         {
+            _hexRoot = GameObject.Find("HexRoot").GetComponent<HexRootManager>();
             _collider = GetComponent<SphereCollider>();
             _ghost = transform.GetChild(0).gameObject;
             _pathCalculator = GetComponent<PathCalculator>();
@@ -87,8 +92,14 @@ namespace _YabuGames.Scripts.Controllers
                 _ghost.transform.position = _ghostPosition;
             }
 
+            _jumpCount = 0;
             _onRewind = onRewind;
-            _stepID++;
+            _collisionController.isGhost = false;
+            if (onJump)
+            {
+                _stepID++;
+                _collisionController.isGhost = true;
+            }
             _ghost.SetActive(onJump);
             Leave();
             _initialPosition = transform.position;
@@ -105,6 +116,8 @@ namespace _YabuGames.Scripts.Controllers
 
         private void BeginMoveSequence()
         {
+            _collisionController.isGhost = false;
+            _stepID = 0;
             _lineRenderer.positionCount = 1;
             _ghost.SetActive(false);
             transform.position = _ghostPosition;
@@ -114,32 +127,44 @@ namespace _YabuGames.Scripts.Controllers
             foreach (var pos in _wayPoints)
             {
                 moveSeq.Append(transform.DOJump(pos, 1
-                    , 2, moveDuration).SetEase(Ease.InOutSine).OnComplete(KillEnemies)).SetDelay(.15f);
+                    , 2, moveDuration).SetEase(Ease.InOutSine).OnComplete(() => KillEnemies())).SetDelay(.15f);
             }
         }
 
-        private void KillEnemies()
+        private void KillEnemies(bool onJump =false)
         {
+            if (onJump)
+            {
+                _jumpCount++;
+            }
+
             _collisionController.onMove = false;
+            _collisionController.hasSelected = false;
             _wayPoints.Clear();
             _sequenceBegan = false;
             var enemies =  _collisionController.GetKilledEnemies();
             _pathCalculator.ResetHints();
             foreach (var enemy in enemies)
             {
-                enemy.Leave();
                 enemy.Die();
             }
             _collisionController.ClearEnemyList();
             _pathCalculator.onJumpKill = false;
-            StartCoroutine(_pathCalculator.Start());
+            
+            if(_jumpCount< _stepID) return;
+            StartCoroutine(SpawnDelay());
         }
 
+        private IEnumerator SpawnDelay()
+        {
+            yield return new WaitForSeconds(0);
+            _hexRoot.Spawn();
+        }
         private void PausePath(bool onJump, bool onRewind =false)
         {
             if (!onJump && !onRewind)
             {
-                KillEnemies();
+                KillEnemies(onJump);
                 return;
             }
 
@@ -157,7 +182,6 @@ namespace _YabuGames.Scripts.Controllers
 
         private void Rewind()
         {
-            _onRewind = true;
             _collisionController.ClearEnemyList();
             _collider.enabled = false;
             _stepID -= 2;
@@ -165,15 +189,28 @@ namespace _YabuGames.Scripts.Controllers
             {
                 _wayPoints.RemoveAt(_wayPoints.Count - 1);
             }
-            var desiredPos = _prevList[_stepID+1].transform.position + Vector3.up * .3f;
+            
+            var desiredPos = _prevList[_stepID + 1].transform.position + Vector3.up * .3f;
             MoveSequence(desiredPos,false,true);
+            if (_onRewind)
+            {
+                _currentHex.ActAsGoButton(false);
+                _currentHex.ByPass(false);
+                _currentHex = _prevList[_stepID];
+                if (_stepID > 0)
+                {
+                    _currentHex.ActAsGoButton(true);
+                }
+                
+            }
             if (_stepID>0)
             {
                 _prevList[_stepID-1].ActAsRewindButton(true);
             }
-            _prevList.RemoveAt(_prevList.Count-1
-            );
-            
+            _prevList.RemoveAt(_prevList.Count-1);
+            if (_stepID == 0)
+                _pathCalculator.onJumpKill = false;
+
         }
         public void Occupy(HexController hex)
         {
@@ -194,7 +231,6 @@ namespace _YabuGames.Scripts.Controllers
         public void Leave()
         {
             if(_onRewind) return;
-            
             if(!_currentHex)
                 return;
             if (_previousHex)

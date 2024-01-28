@@ -8,7 +8,7 @@ namespace _YabuGames.Scripts.Controllers
 {
     public class HexController : MonoBehaviour
     {
-        [SerializeField] private Material neighborMat, jumpMat;
+        [SerializeField] private GameObject jumpHint, neighborHint;
         [SerializeField] private GameObject fakeGoButton;
         [SerializeField] private GameObject fakeRewindButton;
 
@@ -61,17 +61,18 @@ namespace _YabuGames.Scripts.Controllers
                 if (killHint)
                 {
                     isJumpHint = true;
-                    _meshRenderer.material.DOColor(jumpMat.color, .3f).SetEase(Ease.InSine);
+                    jumpHint.SetActive(true);
                 }
                 else
                 {
                     isJumpHint = false;
-                    _meshRenderer.material.DOColor(neighborMat.color, .3f).SetEase(Ease.InSine);
+                    neighborHint.SetActive(true);
                 }
                     
             else
             {
-                _meshRenderer.material.DOColor(_defaultColor, .3f).SetEase(Ease.InSine);
+                jumpHint.SetActive(false);
+                neighborHint.SetActive(false);
             }
         }
         public bool IsOccupied() => _isOccupied;
@@ -92,6 +93,7 @@ namespace _YabuGames.Scripts.Controllers
         {
             _actingAsRewindButton = acting;
             fakeRewindButton.SetActive(acting);
+            _onByPass = acting;
         }
 
         public void ByPass(bool onByPass)

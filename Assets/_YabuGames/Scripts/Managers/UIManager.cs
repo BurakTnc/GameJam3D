@@ -11,6 +11,7 @@ namespace _YabuGames.Scripts.Managers
         
         [SerializeField] private GameObject mainPanel, gamePanel, winPanel, losePanel, storePanel;
         [SerializeField] private TextMeshProUGUI[] moneyText;
+        [SerializeField] private TextMeshProUGUI killText, moveText;
 
 
         private void Awake()
@@ -59,7 +60,16 @@ namespace _YabuGames.Scripts.Managers
             CoreGameSignals.Instance.OnGameStart -= OnGameStart;
         }
         #endregion
-        
+
+        public void SetKillText(int currentKill, int targetKill)
+        {
+            killText.text = $"{currentKill}/{targetKill}";
+        }
+
+        public void SetMoveText(int currentMove)
+        {
+            moveText.text = $"{currentMove}";
+        }
         private void OnGameStart()
         {
             mainPanel.SetActive(false);

@@ -8,6 +8,7 @@ namespace _YabuGames.Scripts.Signals
     {
         public UnityAction OnGo = delegate { };
         public UnityAction OnRewind = delegate { };
+        public UnityAction OnEnemyTurn = delegate { };
         #region Singleton
 
         public static LevelSignals Instance;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _YabuGames.Scripts.Managers;
 using UnityEngine;
 
 namespace _YabuGames.Scripts.Controllers
@@ -8,6 +9,7 @@ namespace _YabuGames.Scripts.Controllers
         public List<EnemyController> _killedEnemies = new List<EnemyController>();
         public bool onMove;
         public bool hasSelected;
+        public bool isGhost;
         
         private PlayerController _playerController;
 
@@ -31,7 +33,11 @@ namespace _YabuGames.Scripts.Controllers
             {
                 if (other.TryGetComponent(out EnemyController enemyController))
                 {
-                    _killedEnemies.Add(enemyController);
+                    if (!_killedEnemies.Contains(enemyController) && !isGhost)
+                    {
+                        ShakeManager.Instance.ShakeCamera(true);
+                        _killedEnemies.Add(enemyController);
+                    }
                 }
             }
         }
