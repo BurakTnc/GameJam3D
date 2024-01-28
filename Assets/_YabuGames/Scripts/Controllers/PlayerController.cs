@@ -29,9 +29,11 @@ namespace _YabuGames.Scripts.Controllers
         private SphereCollider _collider;
         private bool _onRewind;
         private HexRootManager _hexRoot;
+        private AudioSource _source;
 
         private void Awake()
         {
+            _source = GetComponent<AudioSource>();
             _hexRoot = GameObject.Find("HexRoot").GetComponent<HexRootManager>();
             _collider = GetComponent<SphereCollider>();
             _ghost = transform.GetChild(0).gameObject;
@@ -95,9 +97,9 @@ namespace _YabuGames.Scripts.Controllers
             _jumpCount = 0;
             _onRewind = onRewind;
             _collisionController.isGhost = false;
+            _stepID++;
             if (onJump)
             {
-                _stepID++;
                 _collisionController.isGhost = true;
             }
             _ghost.SetActive(onJump);
@@ -117,7 +119,6 @@ namespace _YabuGames.Scripts.Controllers
         private void BeginMoveSequence()
         {
             _collisionController.isGhost = false;
-            _stepID = 0;
             _lineRenderer.positionCount = 1;
             _ghost.SetActive(false);
             transform.position = _ghostPosition;
@@ -127,7 +128,7 @@ namespace _YabuGames.Scripts.Controllers
             foreach (var pos in _wayPoints)
             {
                 moveSeq.Append(transform.DOJump(pos, 1
-                    , 2, moveDuration).SetEase(Ease.InOutSine).OnComplete(() => KillEnemies())).SetDelay(.15f);
+                    , 2, moveDuration).SetEase(Ease.InOutSine).OnComplete(() => KillEnemies(true))).SetDelay(.15f);
             }
         }
 
@@ -146,25 +147,35 @@ namespace _YabuGames.Scripts.Controllers
             _pathCalculator.ResetHints();
             foreach (var enemy in enemies)
             {
+                _source.pitch += .05f;
+                _source.Play();
                 enemy.Die();
             }
             _collisionController.ClearEnemyList();
             _pathCalculator.onJumpKill = false;
             
             if(_jumpCount< _stepID) return;
-            StartCoroutine(SpawnDelay());
+            var delay = _jumpCount * .5f;
+            _stepID = 0;
+            _prevList.Clear();
+            _wayPoints.Clear();
+            _source.pitch = 1;
+            StartCoroutine(SpawnDelay(delay));
         }
 
-        private IEnumerator SpawnDelay()
+        private IEnumerator SpawnDelay(float delay)
         {
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(delay);
             _hexRoot.Spawn();
         }
         private void PausePath(bool onJump, bool onRewind =false)
         {
             if (!onJump && !onRewind)
             {
-                KillEnemies(onJump);
+                _stepID = 0;
+                _prevList.Clear();
+                _wayPoints.Clear();
+                KillEnemies();
                 return;
             }
 
@@ -182,6 +193,7 @@ namespace _YabuGames.Scripts.Controllers
 
         private void Rewind()
         {
+            _onRewind = true;
             _collisionController.ClearEnemyList();
             _collider.enabled = false;
             _stepID -= 2;
@@ -196,6 +208,7 @@ namespace _YabuGames.Scripts.Controllers
             {
                 _currentHex.ActAsGoButton(false);
                 _currentHex.ByPass(false);
+                Debug.Log("stepıd: "+_stepID);
                 _currentHex = _prevList[_stepID];
                 if (_stepID > 0)
                 {

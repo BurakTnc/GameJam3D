@@ -18,6 +18,7 @@ namespace _YabuGames.Scripts.Controllers
         private bool _isDead;
         private List<EnemyController> _enemyList = new List<EnemyController>();
        [SerializeField] private LayerMask hexLayer;
+       [SerializeField] private Transform happyEffect;
 
        private void Awake()
        {
@@ -48,7 +49,10 @@ namespace _YabuGames.Scripts.Controllers
             {
                 if (hitCheck.collider.CompareTag("Enemy"))
                 {
-                    return;
+                    var enemyDistance = Vector3.Distance(hitCheck.transform.position, transform.position);
+                    Debug.Log("distance: "+distance);
+                    if(enemyDistance < 1.5f)
+                        return;
                 }
             }
             if (Physics.Raycast(fixedPos,new Vector3(0,-1,0),out var hit,1000))
@@ -102,7 +106,6 @@ namespace _YabuGames.Scripts.Controllers
             var isSpawned = false;
             var origin = new Vector3(transform.position.x, 0, transform.position.z);
             yield return new WaitForSeconds(_turnPriority * .16f);
-            Debug.Log(_turnPriority);
             while (!isSpawned)
             {
                 
@@ -140,6 +143,7 @@ namespace _YabuGames.Scripts.Controllers
         }
         public void Leave()
         {
+            if(!_currentHex) return;
             _currentHex.Occupy(false);
             _currentHex.SelectionHint(false);
             _currentHex = null;
@@ -157,7 +161,13 @@ namespace _YabuGames.Scripts.Controllers
             _isDead = true;
             Leave();
             _parent.CountMoveCount(true);
-            transform.DOScale(Vector3.zero, .3f).SetEase(Ease.InSine).OnComplete(() => Destroy(gameObject));
+            var particle = Instantiate(Resources.Load<GameObject>("Spawnables/EmojiHappy")).transform;
+            particle.position = transform.position + Vector3.up * 1f;
+            happyEffect.gameObject.SetActive(true);
+            happyEffect.SetParent(null);
+            happyEffect.DOMoveY(2, .5f).SetEase(Ease.InSine).SetRelative(true).OnComplete(() => Destroy(gameObject));          
+            happyEffect.DOScale(Vector3.zero, .4f).SetEase(Ease.InSine);
+            transform.DOMoveY(-1, .2f).SetEase(Ease.Linear);
         }
     }
 }

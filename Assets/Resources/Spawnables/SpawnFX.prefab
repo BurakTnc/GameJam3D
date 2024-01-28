@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 210629028320735780}
   - component: {fileID: 108542581298722041}
   m_Layer: 0
-  m_Name: SpawnParticle
+  m_Name: SpawnFX
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

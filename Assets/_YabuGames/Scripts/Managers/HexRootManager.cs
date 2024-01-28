@@ -97,8 +97,8 @@ namespace _YabuGames.Scripts.Managers
                     yield break;
                 }
             }
-            
-            while (_totalEnemyCount < killTarget[_level] && _currentEnemyCount< _maxEnemyCountAtATime)
+
+            while ( _currentEnemyCount< _maxEnemyCountAtATime)
             {
                 var randomHex = Random.Range(0, _hexagons.Count);
                 var hex = _hexagons[randomHex];
@@ -111,7 +111,7 @@ namespace _YabuGames.Scripts.Managers
                             _enemyList[i].SetPriority(i+1,this);
                         }
                     }
-                    var enemy = Instantiate(Resources.Load<GameObject>("Spawnables/Enemy")).transform;
+                    var enemy = Instantiate(Resources.Load<GameObject>("Spawnables/Enemy_2")).transform;
                     enemy.localScale = Vector3.zero;
                     enemy.position = hex.transform.position + Vector3.up * 1.3f;
                     enemy.DOMove(hex.transform.position + Vector3.up * .3f, .3f)

@@ -17,6 +17,7 @@ namespace _YabuGames.Scripts.Controllers
         private List<HexController> _killHints = new List<HexController>();
         private int _stepCount;
         public bool onJumpKill;
+        private bool _initialized;
 
         private void Awake()
         {
@@ -25,10 +26,13 @@ namespace _YabuGames.Scripts.Controllers
 
         public IEnumerator Start()
         {
+            if (!_initialized)
+                yield return new WaitForSeconds(.5f);
             yield return new WaitForSeconds(.25f);
             CheckEnemies();
             yield return new WaitForSeconds(.10f);
             CheckNeighbors();
+            _initialized = true;
         }
 
         public void CalculateGeneral()
